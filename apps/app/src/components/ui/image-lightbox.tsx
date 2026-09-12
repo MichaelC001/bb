@@ -42,6 +42,7 @@ interface WrappedImageIndexInput {
 
 interface ImageLightboxProps {
   hasMultipleImages?: boolean;
+  navigationStatus?: string;
   imageAlt: string;
   imageSrc: string | null;
   isOpen?: boolean;
@@ -99,6 +100,7 @@ export function getWrappedImageIndex({
 
 export function ImageLightbox({
   hasMultipleImages = false,
+  navigationStatus,
   imageAlt,
   imageSrc,
   isOpen,
@@ -231,6 +233,15 @@ export function ImageLightbox({
             <Icon name="ChevronRight" className="size-5" />
           </Button>
         </>
+      ) : null}
+
+      {navigationStatus ? (
+        <p
+          role="status"
+          className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] max-w-full px-4 text-center text-sm text-white"
+        >
+          {navigationStatus}
+        </p>
       ) : null}
 
       <Button

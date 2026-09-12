@@ -38,6 +38,7 @@ import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { ImageLightbox, getWrappedImageIndex } from "./image-lightbox.js";
+import { InlineImageGalleryContext } from "./inline-image-gallery-context.js";
 import { normalizeMathFences } from "./markdown-math-fences.js";
 import {
   markdownMayContainMath,
@@ -927,12 +928,13 @@ function MarkdownTableCell({ children }: MarkdownTableCellProps) {
   return <td className="border border-border px-2 py-1">{children}</td>;
 }
 
-function renderMarkdownImage({
+function MarkdownRenderedImage({
   alt,
   imageAttributes,
   setExpandedImage,
   src,
 }: MarkdownImageRendererArgs) {
+  const openGallery = useContext(InlineImageGalleryContext);
   const imageUrl = typeof src === "string" ? src : "";
   if (!imageUrl) return null;
   return (
@@ -942,7 +944,12 @@ function renderMarkdownImage({
       alt={typeof alt === "string" ? alt : "Image"}
       className="my-2 max-h-[max(384px,50vh)] max-w-full cursor-zoom-in object-contain"
       loading="lazy"
+      data-markdown-image=""
       onClick={(event) => {
+        if (openGallery) {
+          openGallery(event.currentTarget);
+          return;
+        }
         const markdownElement = event.currentTarget.closest(
           "[data-markdown-preview]",
         );
@@ -1233,12 +1240,14 @@ function buildMarkdownComponents({
         </span>
       );
     }
-    return renderMarkdownImage({
-      alt,
-      imageAttributes,
-      setExpandedImage,
-      src,
-    });
+    return (
+      <MarkdownRenderedImage
+        alt={alt}
+        imageAttributes={imageAttributes}
+        setExpandedImage={setExpandedImage}
+        src={src}
+      />
+    );
   }
 
   function MarkdownSource({
