@@ -42,6 +42,8 @@ interface WrappedImageIndexInput {
 
 interface ImageLightboxProps {
   hasMultipleImages?: boolean;
+  previousDisabled?: boolean;
+  nextDisabled?: boolean;
   navigationStatus?: string;
   imageAlt: string;
   imageSrc: string | null;
@@ -100,6 +102,8 @@ export function getWrappedImageIndex({
 
 export function ImageLightbox({
   hasMultipleImages = false,
+  previousDisabled = false,
+  nextDisabled = false,
   navigationStatus,
   imageAlt,
   imageSrc,
@@ -147,14 +151,14 @@ export function ImageLightbox({
           onClose();
           return;
         case "previous":
-          if (!onPrevious) {
+          if (!onPrevious || previousDisabled) {
             return;
           }
           event.preventDefault();
           onPrevious();
           return;
         case "next":
-          if (!onNext) {
+          if (!onNext || nextDisabled) {
             return;
           }
           event.preventDefault();
@@ -165,7 +169,7 @@ export function ImageLightbox({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hasNavigation, isVisible, onClose, onNext, onPrevious]);
+  }, [hasNavigation, isVisible, onClose, onNext, onPrevious, nextDisabled, previousDisabled]);
 
   if (!isVisible) {
     return null;
@@ -216,8 +220,9 @@ export function ImageLightbox({
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute left-[max(0.5rem,env(safe-area-inset-left))] top-1/2 size-11 -translate-y-1/2 rounded-full bg-black/45 text-white hover:bg-black/60 hover:text-white"
+            className="absolute left-[max(0.5rem,env(safe-area-inset-left))] top-1/2 size-11 -translate-y-1/2 rounded-full bg-black/45 text-white hover:bg-black/60 hover:text-white disabled:pointer-events-auto"
             onClick={onPrevious}
+            disabled={previousDisabled}
             aria-label="Previous image"
           >
             <Icon name="ChevronLeft" className="size-5" />
@@ -226,8 +231,9 @@ export function ImageLightbox({
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-[max(0.5rem,env(safe-area-inset-right))] top-1/2 size-11 -translate-y-1/2 rounded-full bg-black/45 text-white hover:bg-black/60 hover:text-white"
+            className="absolute right-[max(0.5rem,env(safe-area-inset-right))] top-1/2 size-11 -translate-y-1/2 rounded-full bg-black/45 text-white hover:bg-black/60 hover:text-white disabled:pointer-events-auto"
             onClick={onNext}
+            disabled={nextDisabled}
             aria-label="Next image"
           >
             <Icon name="ChevronRight" className="size-5" />
