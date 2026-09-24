@@ -33,6 +33,12 @@ model or default binding policy.
 
 Before stabilization, audit schema export fidelity (especially refinements and transforms), descriptor size and reference limits, lifecycle races, and cross-plugin copied-schema compatibility. Verify `bb plugin rpc list|inspect` is sufficient to implement a consumer without a shared contract package. Method names carry optional versions; there is no negotiation.
 
+## Plugin safe mode
+
+`bb.sdk.plugins.experimental_getSafeMode()` returns `{ enabled }`, and `bb.sdk.plugins.experimental_setSafeMode({ enabled })` turns safe mode on or off and returns `{ enabled, problems }`, where `problems` names each plugin that did not start when safe mode ended. The server persists the flag. Plugins included with bb keep running: rows with `builtin` provenance, plus rows from an auto-installed bundled source that kept catalog provenance. Every other installed plugin, including official store plugins, stays unloaded with status `disabled` and detail `safe mode is on`. Each plugin's own `enabled` flag is untouched, so turning safe mode off reloads exactly the plugins that were enabled. While safe mode is on, enabling a stopped plugin keeps it unloaded, reloading it reports a failure, and installing or updating it is refused so install handlers and update validation never run against an unloaded plugin. The same toggle backs `bb plugin safe-mode [on|off]` and the command palette.
+
+Before stabilization, audit whether official store plugins should count as included, whether a plugin calling `experimental_setSafeMode` should be allowed to stop itself and others, whether the toggle should run asynchronously for installs with many slow plugins, and whether startup needs an out-of-band override (env var or flag) for a plugin that breaks the server before the toggle is reachable.
+
 ## `bb.http.experimental_websocket`
 
 **What it does.** Registers an exact-path WebSocket upgrade in the plugin's
