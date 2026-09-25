@@ -131,6 +131,7 @@ export function useVoiceInput(options: UseVoiceInputOptions) {
   const startedAtMsRef = useRef<number | null>(null);
   const promptContextRef = useRef<string | undefined>(undefined);
   const shouldTranscribeRef = useRef(true);
+  const acceptedRecordingPendingRef = useRef(false);
   const transcriptionAbortRef = useRef<AbortController | null>(null);
   const wakeLockSentinelRef = useRef<WakeLockSentinel | null>(null);
   const wakeLockRequestRef = useRef<Promise<void> | null>(null);
@@ -224,22 +225,21 @@ export function useVoiceInput(options: UseVoiceInputOptions) {
   useEffect(() => {
     return () => {
       const recorder = mediaRecorderRef.current;
+      const acceptedRecordingPending = acceptedRecordingPendingRef.current;
       if (recorder && recorder.state === "recording") {
+        shouldTranscribeRef.current = false;
         try {
           recorder.stop();
         } catch {}
       }
       mediaRecorderRef.current = null;
-      chunksRef.current = [];
-      startedAtMsRef.current = null;
-      promptContextRef.current = undefined;
-      shouldTranscribeRef.current = true;
-      releaseRecordingWakeLock();
-      if (transcriptionAbortRef.current) {
-        transcriptionAbortRef.current.abort();
-        transcriptionAbortRef.current = null;
+      if (!acceptedRecordingPending) {
+        chunksRef.current = [];
+        startedAtMsRef.current = null;
+        promptContextRef.current = undefined;
       }
-      stopMediaStream();
+      releaseRecordingWakeLock();
+      if (!acceptedRecordingPending) stopMediaStream();
     };
   }, [releaseRecordingWakeLock, stopMediaStream]);
 
@@ -271,6 +271,7 @@ export function useVoiceInput(options: UseVoiceInputOptions) {
       startedAtMsRef.current = Date.now();
       promptContextRef.current = options.getPromptContext?.();
       shouldTranscribeRef.current = true;
+      acceptedRecordingPendingRef.current = false;
       shouldHoldWakeLockRef.current = true;
       requestRecordingWakeLock();
 
@@ -295,6 +296,7 @@ export function useVoiceInput(options: UseVoiceInputOptions) {
       };
 
       recorder.onstop = async () => {
+        acceptedRecordingPendingRef.current = false;
         releaseRecordingWakeLock();
         stopMediaStream();
 
@@ -341,6 +343,7 @@ export function useVoiceInput(options: UseVoiceInputOptions) {
             promptContext,
             signal: abortController.signal,
           });
+          if (abortController.signal.aborted) return;
           const normalized = normalizeTranscript(transcript);
           if (normalized.length === 0) {
             throw new Error("Voice transcription returned an empty result.");
@@ -376,6 +379,7 @@ export function useVoiceInput(options: UseVoiceInputOptions) {
       startedAtMsRef.current = null;
       promptContextRef.current = undefined;
       shouldTranscribeRef.current = true;
+      acceptedRecordingPendingRef.current = false;
       transcriptionAbortRef.current = null;
       releaseRecordingWakeLock();
       showError(
@@ -407,9 +411,11 @@ export function useVoiceInput(options: UseVoiceInputOptions) {
       return;
     }
     shouldTranscribeRef.current = true;
+    acceptedRecordingPendingRef.current = true;
     try {
       recorder.stop();
     } catch (error) {
+      acceptedRecordingPendingRef.current = false;
       showError(resolveRecordingErrorMessage(error));
     }
   }, [showError, state]);
@@ -419,6 +425,7 @@ export function useVoiceInput(options: UseVoiceInputOptions) {
       const recorder = mediaRecorderRef.current;
       if (recorder && recorder.state === "recording") {
         shouldTranscribeRef.current = false;
+        acceptedRecordingPendingRef.current = false;
         try {
           recorder.stop();
         } catch (error) {

@@ -2177,6 +2177,7 @@ export function ThreadDetailPromptArea({
       activePromptMode={isHandoffSelection ? null : activePromptMode}
       composer={shouldHideComposer ? null : bottomComposerConfig}
       pluginComposerHost={normalPluginComposerHost}
+      voiceDraft={promptDraft}
       pluginComposerScope={normalPluginComposerHost.scope}
       textEffects={promptTextEffects}
       collapseResetKey={thread.id}
