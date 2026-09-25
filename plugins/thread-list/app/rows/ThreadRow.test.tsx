@@ -1421,6 +1421,7 @@ describe("ThreadRow", () => {
             "aria-describedby": "thread-sortable",
           },
           disabled: false,
+          isDragging: false,
           listeners: { onPointerDown },
           setActivatorNodeRef: vi.fn(),
         },
@@ -1433,6 +1434,33 @@ describe("ThreadRow", () => {
     );
 
     expect(onPointerDown).not.toHaveBeenCalled();
+  });
+
+  it("starts touch reordering from the thread row", () => {
+    const onTouchStart = vi.fn();
+    renderThreadRow({
+      options: {
+        ...DEFAULT_OPTIONS,
+        dragBindings: {
+          attributes: {
+            role: "button",
+            tabIndex: 0,
+            "aria-disabled": false,
+            "aria-pressed": undefined,
+            "aria-roledescription": "sortable",
+            "aria-describedby": "thread-sortable",
+          },
+          disabled: false,
+          isDragging: false,
+          listeners: { onTouchStart },
+          setActivatorNodeRef: vi.fn(),
+        },
+      },
+    });
+
+    fireEvent.touchStart(screen.getByRole("link", { name: "Open Thread" }));
+    expect(onTouchStart).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Reorder Thread" })).toBeNull();
   });
 
   it("suppresses the click that follows a drag and drops the suppression afterwards", () => {

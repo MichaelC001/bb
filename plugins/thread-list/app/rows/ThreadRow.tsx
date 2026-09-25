@@ -72,6 +72,7 @@ import type {
   ThreadRowNestDrop,
 } from "./sidebarThreadRowDroppable.js";
 import type { SidebarSortableDragBindings } from "./sortableMotion.js";
+import { SidebarThreadDragChip } from "../dnd/sidebarThreadDragChip.js";
 import { SplitPaneMiniMap } from "./SplitPaneMiniMap.js";
 import {
   ThreadActionsContextMenu,
@@ -437,6 +438,7 @@ function ThreadRowComponent({
     !showActive &&
       "has-[[data-state=open]]:bg-sidebar-accent has-[[data-sidebar-rename-anchor]:focus-visible]:bg-sidebar-accent",
     rowDragBindings && !rowDragBindings.disabled && "select-none",
+    "data-[sidebar-touch-armed=true]:!bg-transparent",
     nestTargetState && NEST_TARGET_STATE_CLASS[nestTargetState],
     reorderPlacement && REORDER_PLACEMENT_CLASS[reorderPlacement],
   );
@@ -479,6 +481,7 @@ function ThreadRowComponent({
       <span
         className={cn(
           "relative flex min-w-0 flex-1 items-center gap-1.5 self-stretch",
+          "group-data-[sidebar-touch-armed=true]/thread-row:hidden",
           !shortcut &&
             !isEditing &&
             (reserveActionSpace
@@ -573,10 +576,17 @@ function ThreadRowComponent({
           />
         ) : null}
       </span>
+      {rowDragBindings && !rowDragBindings.disabled ? (
+        <SidebarThreadDragChip
+          title={labelTitle}
+          visualOnly
+          className="hidden group-data-[sidebar-touch-armed=true]/thread-row:flex"
+        />
+      ) : null}
       <span
         data-sidebar-thread-trailing=""
         className={cn(
-          "flex shrink-0 items-center gap-0.5",
+          "flex shrink-0 items-center gap-0.5 group-data-[sidebar-touch-armed=true]/thread-row:hidden",
           isEditing && "hidden",
         )}
       >
@@ -710,6 +720,7 @@ function ThreadRowComponent({
       onRename={rename.startEditingFromMenu}
       onCloseAutoFocus={rename.onCloseAutoFocus}
       disabled={isEditing}
+      dragging={rowDragBindings?.isDragging ?? false}
     >
       {row}
     </ThreadActionsContextMenu>
